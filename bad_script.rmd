@@ -1,0 +1,139 @@
+# Antecedentes de esta actividad
+
+Escribir código claro, informativo y fácil de usar es fundamental para desarrollar software de alta calidad, especialmente en equipos de trabajo y proyectos a largo plazo. Las buenas prácticas que contribuyen a este objetivo abarcan aspectos como la legibilidad, la documentación, la estructura del código, y el uso de herramientas adecuadas. A continuación, se detalla cómo aplicar estas prácticas de manera efectiva:
+
+## Paso 1: Uso de `paquetes R`
+
+En esta actividad,se utilizará un paquete llamado "tidyverse". El paquete "tidyverse" es en realidad una colección de "paquetes" individuales que pueden ayudarlo a realizar una amplia variedad de tareas de análisis. Incluye este comando antes de instalar paquetes:
+
+```{r setup, include=FALSE}
+options(repos = c(CRAN = "https://cloud.r-project.org"))
+```
+
+```{r}
+install.packages("tidyverse") # instalacion de paquete 
+```
+
+## Libraries
+
+```{r}
+library(tidyr) # Formateo de datos para el analisis
+library(dplyr) # manipulacion de datos
+library(ggplot2) # visualizacion de resultados
+library(readr) # manipulacion de los datos
+```
+
+## Paso 2: Carga de la data desde un archivo externo.
+
+```{r}
+LPI <- read.csv("LPIdata_CC.csv") # Import data from .csv --
+```
+
+## Formateo de la data
+
+```{r}
+LPI2 <- gather(LPI,"year","abundance",9:53) # formaro ancho a formato largo
+```
+
+```{r}
+LPI2$year <- parse_number(LPI2$year) # parseo de tipo string a num
+```
+
+```{r}
+names(LPI2) # verificacion de nombres de columnas
+```
+
+```{r}
+names(LPI2) <- tolower(names(LPI2)) # formateo de nombres todos a minuscula
+```
+
+```{r}
+LPI2$abundance <- as.numeric(LPI2$abundance) # parseo de la variable abundance  a num
+```
+
+```{r}
+LPI2_biome_summ <- LPI2 %>% # use of pipe operator
+  group_by(biome) %>% # Group by biome
+  summarise(populations = n()) # Create columns, number of populations
+```
+
+## Seleccionar y mostrar las primeras filas y las primeras columnas
+
+```{r}
+head(LPI2_biome_summ)
+```
+
+## Definicion de Funciones
+
+```{r}
+theme.LPI <- function(){ # funcion ggplot2 
+  theme_bw()+
+    theme(axis.text.x=element_text(size=12, angle=45, vjust=1, hjust=1),
+          axis.text.y=element_text(size=12),
+          axis.title.x=element_text(size=14, face="plain"),             
+          axis.title.y=element_text(size=14, face="plain"),             
+          panel.grid.major.x=element_blank(),                                          
+          panel.grid.minor.x=element_blank(),
+          panel.grid.minor.y=element_blank(),
+          panel.grid.major.y=element_blank(),  
+          plot.margin = unit(c(0.5, 0.5, 0.5, 0.5), units = , "cm"),
+          plot.title = element_text(size=20, vjust=1, hjust=0.5),
+          legend.text = element_text(size=12, face="italic"),          
+          legend.title = element_blank(),                              
+          legend.position=c(0.9, 0.9))
+}
+
+```
+
+## Grafico de barras bioma
+
+```{r}
+type <- "bar"
+biome_barplot <- ggplot(LPI2_biome_summ, aes(biome, color = biome)) +   {if (type == "bar") geom_bar() else geom_point(stat = "count")} +   theme.LPI() +   ylab("Number of populations") +   xlab("Biome") +   theme(legend.position = "none")
+```
+
+## Grafico de puntos bioma
+
+```{r}
+type = "point"
+biome_dotplot <- ggplot(LPI2, aes(biome, color = biome)) + {
+	if(type == "bar") geom_bar() else geom_point(stat = "count")
+	} +
+	theme.LPI() + 
+	ylab("Number of populations") + 
+	xlab("Biome") +
+	theme(legend.position = "none")
+```
+
+## Mostrar graficos
+
+```{r}
+
+print(biome_barplot)
+```
+
+```{r}
+print(biome_dotplot)
+```
+
+## Compare plots
+
+```{r}
+biome_barplot
+biome_dotplot
+```
+
+## Guardar el primer gráfico que es de barras como PDF
+
+```{r}
+# Bar graph looks better, save to pdf
+type = "bar"
+pdf(file="img/biome_freq_barplot.pdf",  width = 13.33, height = 26.66)
+ggplot(LPI2_biome_summ, aes(biome, color = biome)) + {
+	if(type == "bar") geom_bar() else geom_point(stat = "count")
+	} +
+	theme.LPI() + 
+	ylab("Number of populations") + 
+	xlab("Biome") +
+	theme(legend.position = "none")
+```
